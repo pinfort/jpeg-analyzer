@@ -1,4 +1,11 @@
+import pprint
+
 class HeaderAnalyze(object):
+    Scanning = False
+    Images = []
+    ImageData = []
+    segments = []
+
     SOI = 0xd8
     EOI = 0xd9
     JUST_FF = 0x00
@@ -77,41 +84,49 @@ class HeaderAnalyze(object):
         self.f.close()
     
     def __getData(self, count):
-        if count < 2:
-            return int.from_bytes(self.f.read(count), 'big')
-        return list(self.f.read(count))
+        bt = list(self.f.read(count))
+        if self.Scanning:
+            self.ImageData.extend(bt)
+        return bt
 
-    # return Dict || Bytes
-    def TokenizeLoop(self):
-        try:
-            bt = self.__getData(1)
-        except Exception as e:
-            return []
+    def tokenizeLoop(self):
+        btl = self.__getData(1)
+        while len(btl) != 0:
+            segment = self.__tokenize(btl[0])
+            if segment is not None:
+                self.segments.append(segment)
+            btl = self.__getData(1)
+        return self.segments
 
+    def __tokenize(self, bt):
         if bt == 0xFF:
-            return self.__Tokenize()
+            bt2 = self.__getData(1)[0]
+            if bt2 in self.REGISTERED_MARKERS:
+                return self.__AnalyzeMarkers(bt2)
+            else:
+                while bt2 != 0xFF:
+                    bt2 = self.__getData(1)[0]
+                return self.__tokenize(bt2)
         else:
-            return self.TokenizeLoop()
-
-
-    # return Dict
-    def __Tokenize(self):
-        segmentsList = []
-
-        try:
-            bt = self.__getData(1)
-        except Exception as e:
-            return segmentsList
-        
-        if bt == 0xFF:
-            segmentsList.extend(self.__Tokenize())
-        elif bt in self.REGISTERED_MARKERS:
-            segmentsList.append(self.__AnalyzeMarkers(bt))
-        segmentsList.extend(self.TokenizeLoop())
-        return segmentsList
+            while bt != 0xFF:
+                bt = self.__getData(1)[0]
+            return self.__tokenize(bt)
 
     # return Dict
     def __AnalyzeMarkers(self, bt):
+        # continue scanning after JUST_FF
+        if bt == self.JUST_FF:
+            return None
+
+        if self.Scanning:
+            self.Scanning = False
+            self.ImageData = self.ImageData[0:len(self.ImageData) - 2]
+            self.Images.append(self.ImageData)
+            self.segments.append({
+                "segmentName": "Image",
+                "length": len(self.ImageData)
+            })
+            self.ImageData = []
         if bt == self.SOI:
             # SOI (FFD8) has no body
             return {
@@ -123,11 +138,6 @@ class HeaderAnalyze(object):
             return {
                 "segmentName": "EOI",
                 "length": 0,
-            }
-        elif bt == self.JUST_FF:
-            return {
-                "segmentName": "JUST_FF",
-                "length": 0
             }
 
         body = self.__getSegmentBody()
@@ -165,7 +175,7 @@ class HeaderAnalyze(object):
     def __getSegmentBodyLength(self, length_for_length_data):
         length = 0
         for i in range(length_for_length_data):
-            length = length + (self.__getData(1) * (0x100 ** (length_for_length_data - i - 1)))
+            length = length + (self.__getData(1)[0] * (0x100 ** (length_for_length_data - i - 1)))
         return length - length_for_length_data
     
     def __getSegmentBody(self, length_for_length_data = 2):
@@ -240,7 +250,7 @@ class HeaderAnalyze(object):
         if analyzed["tcn"] == 0:
             table = self.__getDcHuffmanTable(l, v)
         elif analyzed["tcn"] == 1:
-            raise NotImplementedError("AC huffman table support not inplemented")
+            table = self.__getAcHuffmanTable(l, v)
         else:
             raise Exception("invalied data. not supported")
         analyzed["table"] = table
@@ -319,7 +329,29 @@ class HeaderAnalyze(object):
     def __getAcHuffmanTableDef(self, bitList, v):
         if len(bitList) != len(v):
             raise Exception("invalid data")
-        pass
+        table = {}
+        for i in range(len(bitList)):
+            target_bit = bitList[i]
+            target_zero_runlength = v[i] >> 4
+            target_data_bit_length = v[i] & 0b00001111
+            if v[i] == 0:
+                table[target_bit] = ["EOB"]
+            elif target_data_bit_length == 0:
+                table[target_bit] = []
+                [table[target_bit].append(0) for i in range(target_zero_runlength)]
+            else:
+                for i in range(2 ** target_data_bit_length):
+                    target_data_list = []
+                    [target_data_list.append(0) for i in range(target_zero_runlength)]
+                    val = format(i, '0' + str(target_data_bit_length) + 'b')
+                    if val[0] == '0':
+                        val2 = val.replace('0', '2').replace('1', '0').replace('2', '1')
+                        target_data_list.append(int(val2, 2) * -1)
+                        table[target_bit + val] = target_data_list
+                    else:
+                        target_data_list.append(i)
+                        table[target_bit + val] = target_data_list
+        return table
 
     def __getDcHuffmanTable(self, l, v):
         bitList = self.__getHuffmanTableBitList(l)
@@ -383,7 +415,7 @@ class HeaderAnalyze(object):
         analyzed["se"] = body[offset + 1]
         analyzed["ah"] = body[offset + 2] >> 4
         analyzed["al"] = body[offset + 2] & 0b00001111
-        print(analyzed)
+        self.Scanning = True
         return analyzed
 
     def __analyzeCom(self, body):
@@ -392,13 +424,10 @@ class HeaderAnalyze(object):
         analyzed["comment"] = ''.join([chr(i) for i in body])
         return analyzed
 
-
 if __name__ == "__main__":
     # path = "C:\\Users\\pinfo\\Downloads\\DsmAkbxVYAEKktJ_orig.jpg"
-    label = [
-        "HEADER: ",
-        "IMAGE",
-    ]
     # C:\\Users\\pinfo\\Documents\\CIMG1106.JPG
-    analyzed = HeaderAnalyze("C:\\Users\\pinfo\\Downloads\\DsmAkbxVYAEKktJ_orig.jpg").TokenizeLoop()
-    # print(analyzed)
+    analyzed = HeaderAnalyze("C:\\Users\\pinfo\\Downloads\\DsmAkbxVYAEKktJ_orig.jpg").tokenizeLoop()
+    with open("C:\\Users\\pinfo\\Documents\\repositories\\jpeg-analyzer\\out.txt", 'w') as f:
+        pp = pprint.PrettyPrinter(indent=0)
+        f.write(pp.pformat(analyzed))
