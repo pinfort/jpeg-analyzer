@@ -145,7 +145,7 @@ class HeaderAnalyze(object):
             pass
         elif bt == self.COM:
             # do com
-            pass
+            return self.__analyzeCom(body)
         elif bt in self.APP:
             # do app
             return self.__analyzeApp(bt, body)
@@ -367,6 +367,7 @@ class HeaderAnalyze(object):
 
     def __analyzeSos(self, body):
         analyzed = {}
+        analyzed["segmentName"] = "SOS"
         analyzed["ns"] = body[0]
         analyzed["cs"] = []
         offset = 0
@@ -383,6 +384,12 @@ class HeaderAnalyze(object):
         analyzed["ah"] = body[offset + 2] >> 4
         analyzed["al"] = body[offset + 2] & 0b00001111
         print(analyzed)
+        return analyzed
+
+    def __analyzeCom(self, body):
+        analyzed = {}
+        analyzed["segmentName"] = "COM"
+        analyzed["comment"] = ''.join([chr(i) for i in body])
         return analyzed
 
 
