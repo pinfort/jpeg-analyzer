@@ -402,7 +402,7 @@ class HeaderAnalyze(object):
         analyzed["segmentName"] = "SOS"
         analyzed["ns"] = body[0]
         analyzed["cs"] = []
-        offset = 0
+        offset = 1
         for i in range(analyzed["ns"]):
             cs = {}
             cs["id"] = body[offset]
