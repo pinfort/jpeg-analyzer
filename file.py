@@ -34,7 +34,7 @@ class File(object):
             raise Exception("unexpected marker found. it's not supported.")
         if marker != Markers.JUST_FF:
             # データの最後にマーカー（2ビット）がついているので末尾2ビット削除
-            self.IMG_DATA = self.IMG_DATA[0:len(self.IMG_DATA - 2)]
+            self.IMG_DATA = self.IMG_DATA[0:len(self.IMG_DATA) - 2]
             self.IMAGES.append(self.IMG_DATA)
             self.IMG_DATA = []
             self.IS_SCANNING = False
