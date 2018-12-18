@@ -1,9 +1,4 @@
-import sys
-import os
-sys.path.append(os.pardir)
-sys.path.append("../..")
-
-from segmentsCommon import SegmentsCommon
+from segments.segmentsCommon import SegmentsCommon
 from markers import Markers
 
 class APP0(SegmentsCommon):

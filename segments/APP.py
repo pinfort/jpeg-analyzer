@@ -1,11 +1,8 @@
-import sys
-import os
 import warnings
-sys.path.append(os.pardir)
 
-from segmentsCommon import SegmentsCommon
+from segments.segmentsCommon import SegmentsCommon
 from markers import Markers
-from APPs.APP0 import APP0
+from segments.APPs.APP0 import APP0
 
 class APP(SegmentsCommon):
     def __init__(self):

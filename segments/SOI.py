@@ -1,8 +1,4 @@
-import sys
-import os
-sys.path.append(os.pardir)
-
-from segmentsCommon import SegmentsCommon
+from segments.segmentsCommon import SegmentsCommon
 from markers import Markers
 
 class SOI(SegmentsCommon):

@@ -1,11 +1,7 @@
-import sys
-import os
-sys.path.append(os.pardir)
-
-from segmentsCommon import SegmentsCommon
+from segments.segmentsCommon import SegmentsCommon
 from markers import Markers
 
-from SOFs.SOF2 import SOF2
+from segments.SOFs.SOF2 import SOF2
 
 class SOF(SegmentsCommon):
     def __init__(self):
