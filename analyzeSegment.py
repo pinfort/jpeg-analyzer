@@ -8,9 +8,9 @@ from segments.COM import COM
 from segments.APP import APP
 from segments.SOS import SOS
 
-class segment(object):
+class analyzeSegment(object):
     def __init__(self):
-        super(segment, self).__init__()
+        super(analyzeSegment, self).__init__()
 
     def analyze(self, marker, body):
         if marker == Markers.JUST_FF:
