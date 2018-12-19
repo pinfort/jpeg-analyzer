@@ -2,9 +2,10 @@ from segmentsFromFile import SegmentFromFile
 from analyzeSegment import analyzeSegment
 
 def main(path):
+    analyzer = analyzeSegment()
     segs = SegmentFromFile(path)
     for seg in segs.tokenizeLoop():
-        analyzed = analyzeSegment().analyze(seg["marker"], seg["body"])
+        analyzed = analyzer.analyze(seg["marker"], seg["body"])
         print(analyzed) if analyzed is not None else ""
 
 if __name__ == '__main__':
