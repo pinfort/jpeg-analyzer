@@ -35,7 +35,7 @@ class File(object):
         if marker != Markers.JUST_FF:
             # データの最後にマーカー（2ビット）がついているので末尾2ビット削除
             self.IMG_DATA = self.IMG_DATA[0:len(self.IMG_DATA) - 2]
-            self.IMAGES.append(self.IMG_DATA)
+            self.IMAGES.append(self.IMG_DATA) if len(self.IMG_DATA) > 0 else []
             self.IMG_DATA = []
             self.IS_SCANNING = False
         if marker in [Markers.JUST_FF, Markers.SOI, Markers.EOI]:
