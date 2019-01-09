@@ -1,3 +1,4 @@
+import warnings
 from markers import Markers
 from segments.SOI import SOI
 from segments.EOI import EOI
@@ -47,7 +48,5 @@ class analyzeSegment(object):
             pass
         else:
             raise ValueError(str(b'\xFF') + str(marker.to_bytes(1, 'big')) + " is not supported marker")
-        return {
-            "segmentName": "Not Implemented",
-            "length": 0,
-        }
+        warnings.warn("this type segment not supported. please inform to the author.")
+        return None
