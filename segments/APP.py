@@ -43,5 +43,4 @@ class APP(SegmentsCommon):
             pass
         else:
             raise ValueError("invailed marker. marker " + marker.to_bytes(1, 'big') + " found. class APP is not excepting it.\nAPP expecting marker is below.\n" + str([m.to_bytes(1, 'big') for m in Markers.APP]))
-        # raise NotImplementedError("this type APP segment not supported. please inform to the author.")
         warnings.warn("this type APP segment not supported. please inform to the author.")
