@@ -1,5 +1,6 @@
 from segments.segmentsCommon import SegmentsCommon
 from markers import Markers
+from colors import colors
 
 class SOF2(SegmentsCommon):
     def __init__(self):
@@ -20,6 +21,8 @@ class SOF2(SegmentsCommon):
         nfLength = 3
         for i in range(analyzed["nf"]):
             nfDict = {}
+            nfDict["id"] = i + 1
+            nfDict["name"] = colors(analyzed["nf"])[i]
             nf = body[nfHead:nfHead + nfLength]
             nfDict["cn"] = nf[0]
             hv = nf[1]
